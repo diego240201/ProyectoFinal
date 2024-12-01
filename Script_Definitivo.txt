@@ -1,0 +1,64 @@
+create table Almacen (
+	AlmacenID varchar (100) PRIMARY KEY,
+	Encargado varchar (100) not null,
+	Ubicacion varchar (100) not null
+);
+
+create table Equipo (
+	EquipoID int PRIMARY KEY,
+	TipoDeEquipo varchar(50) not null,
+	numSerie varchar(100) not null,
+	estado varchar(20) not null,
+	AlmacenID varchar (100) references Almacen(AlmacenID)
+);
+
+create table Mantenimiento (
+	MantenimientoID int PRIMARY KEY,
+	TipoDeMantenimiento varchar (50) not NULL,
+	costo decimal (18,2) not null,
+	fechainicio date,
+	FechaFin date,
+	estado varchar(20),
+	EquipoID int REFERENCES Equipo(EquipoID)
+);
+
+create table Proveedor (
+	ProveedorID int PRIMARY KEY,
+	Nombre varchar(100) not null,
+	Contacto varchar(100) not null
+);
+
+CREATE TABLE OrdenCompra (
+    OrdenCompraID INT PRIMARY KEY,
+    costoTotal DECIMAL(18, 2) NOT NULL,
+    Fecha_Compra DATE NULL,
+    ProveedorID INT REFERENCES Proveedor(ProveedorID)
+);
+
+create table Repuesto(
+	RepuestoID int PRIMARY KEY,
+	Tipo varchar(50) not null,
+	Nombre varchar(100) not null,
+	Cantidad int not null
+);
+
+create table OrdenCompra_Repuesto(
+	cantidad int not null,
+	precioUnit decimal (18,2) not null,
+	OrdenCompraID int references OrdenCompra(OrdenCompraID),
+	RepuestoID int references Repuesto(RepuestoID)
+);
+
+create table Proveedor_Repuesto(
+	PrecioUnit decimal(18,2) not null,
+	TiempoEntrega int not null,
+	estado  varchar(20) not null,
+	RepuestoID int references Repuesto(RepuestoID),
+	ProveedorID int references Proveedor (ProveedorID)
+);
+
+create table Mantenimiento_repuesto(
+	cantidad int not null,
+	MantenimientoID int REFERENCES Mantenimiento(MantenimientoID),
+	RepuestoID int references Repuesto(RepuestoID)
+);

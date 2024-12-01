@@ -1,0 +1,132 @@
+Consultar disponibilidad de repuestos
+
+CREATE OR REPLACE FUNCTION consultar_disponibilidad (id_repuesto NUMBER)
+RETURN VARCHAR2 AS
+   cantidad_actual NUMBER;
+BEGIN
+   SELECT Cantidad INTO cantidad_actual 
+   FROM Repuesto WHERE RepuestoID = id_repuesto;
+   RETURN CASE 
+      WHEN cantidad_actual < 50 THEN 'Crítico'
+      ELSE 'Disponible'
+   END;
+END;
+
+Costo acumulado por mantenimiento
+
+CREATE OR REPLACE FUNCTION calcular_costo_total_mantenimientos (fecha_inicio DATE, fecha_fin DATE)
+RETURN NUMBER AS
+   costo_total NUMBER;
+BEGIN
+   SELECT SUM(costo) INTO costo_total 
+   FROM Mantenimiento 
+   WHERE FechaInicio BETWEEN fecha_inicio AND fecha_fin;
+   RETURN NVL(costo_total, 0);
+END;
+
+TRIGGER Notificación de stock crítico
+
+CREATE OR REPLACE TRIGGER alerta_stock_critico
+AFTER UPDATE ON Repuesto
+FOR EACH ROW
+BEGIN
+   IF :NEW.Cantidad < 50 THEN
+      DBMS_OUTPUT.PUT_LINE('ALERTA: El repuesto ' || :NEW.Nombre || ' tiene inventario crítico.');
+   END IF;
+END;
+
+
+Predicción de demanda futura de repuestos (con tendencia lineal simple)
+
+CREATE OR REPLACE FUNCTION predecir_demanda (id_repuesto NUMBER, meses_a_predecir NUMBER)
+RETURN NUMBER AS
+   demanda_promedio NUMBER;
+BEGIN
+   SELECT AVG(cantidad) INTO demanda_promedio 
+   FROM Mantenimiento_repuesto 
+   WHERE RepuestoID = id_repuesto;
+   RETURN demanda_promedio * meses_a_predecir;
+END;
+
+
+Ranking de equipos más costosos de mantener
+
+CREATE OR REPLACE FUNCTION equipos_costosos (top_n NUMBER)
+RETURN SYS_REFCURSOR AS
+   resultado SYS_REFCURSOR;
+BEGIN
+   OPEN resultado FOR
+   SELECT EquipoID, SUM(costo) AS total_costo 
+   FROM Mantenimiento 
+   GROUP BY EquipoID 
+   ORDER BY total_costo DESC
+   FETCH FIRST top_n ROWS ONLY;
+   RETURN resultado;
+END;
+
+Control dinámico de precios en órdenes de compra
+
+CREATE OR REPLACE TRIGGER ajustar_precio_orden
+BEFORE INSERT OR UPDATE ON OrdenCompra_Repuesto
+FOR EACH ROW
+BEGIN
+   IF :NEW.cantidad > 50 THEN
+      :NEW.precioUnit := :NEW.precioUnit * 0.9; -- Descuento del 10%.
+   ELSIF :NEW.cantidad > 100 THEN
+      :NEW.precioUnit := :NEW.precioUnit * 0.85; -- Descuento del 15%.
+   END IF;
+END;
+
+Automatización de órdenes de compra para repuestos críticos
+
+CREATE OR REPLACE TRIGGER crear_orden_critica
+AFTER UPDATE ON Repuesto
+FOR EACH ROW
+BEGIN
+   IF :NEW.Cantidad < 30 THEN
+      INSERT INTO OrdenCompra (OrdenCompraID, costoTotal, Fecha_Compra, ProveedorID)
+      VALUES (SEQ_ORDEN_COMPRA.NEXTVAL, :NEW.Cantidad * 100, SYSDATE, 1); -- Precio estimado.
+      DBMS_OUTPUT.PUT_LINE('Orden automática generada para el repuesto ' || :NEW.RepuestoID);
+   END IF;
+END;
+
+
+Simulación de escenarios de falla
+
+CREATE OR REPLACE PROCEDURE simular_fallas (
+   dias_sin_mantenimiento NUMBER, 
+   resultado OUT NUMBER
+) AS
+   equipos_afectados NUMBER;
+BEGIN
+   SELECT COUNT(DISTINCT EquipoID) INTO equipos_afectados 
+   FROM Mantenimiento
+   WHERE TipoDeMantenimiento = 'Preventivo' AND FechaFin < SYSDATE - dias_sin_mantenimiento;
+   
+   resultado := equipos_afectados;
+   DBMS_OUTPUT.PUT_LINE('Equipos afectados sin mantenimiento preventivo: ' || resultado);
+END;
+
+
+Trigger de evaluación de proveedores
+
+
+CREATE OR REPLACE TRIGGER evaluar_proveedor
+AFTER INSERT ON OrdenCompra
+FOR EACH ROW
+DECLARE
+   tiempo_promedio NUMBER;
+BEGIN
+   SELECT AVG(SYSDATE - Fecha_Compra) INTO tiempo_promedio 
+   FROM OrdenCompra WHERE ProveedorID = :NEW.ProveedorID;
+   
+   IF tiempo_promedio > 7 THEN
+      DBMS_OUTPUT.PUT_LINE('ALERTA: Revisar al proveedor ' || :NEW.ProveedorID || ' por tiempos de entrega elevados.');
+   END IF;
+END;
+
+
+
+
+
+
