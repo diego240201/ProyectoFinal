@@ -1,0 +1,16 @@
+app.delete('/equipos/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const connection = await oracledb.getConnection(config);
+        await connection.execute(
+            `DELETE FROM Equipo WHERE EquipoID = :1`,
+            [id],
+            { autoCommit: true }
+        );
+        res.send('Equipo eliminado correctamente');
+        await connection.close();
+    } catch (err) {
+        console.error('Error al eliminar equipo:', err);
+        res.status(500).send('Error al eliminar equipo');
+    }
+});

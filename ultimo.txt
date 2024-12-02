@@ -1,0 +1,29 @@
+<form
+    onSubmit={(e) => {
+        e.preventDefault();
+        agregarEquipo();
+    }}
+>
+    <input
+        type="text"
+        placeholder="Tipo de Equipo"
+        value={nuevoEquipo.TipoDeEquipo}
+        onChange={(e) => setNuevoEquipo({ ...nuevoEquipo, TipoDeEquipo: e.target.value })}
+        required
+    />
+    <input
+        type="text"
+        placeholder="Número de Serie"
+        value={nuevoEquipo.numSerie}
+        onChange={(e) => setNuevoEquipo({ ...nuevoEquipo, numSerie: e.target.value })}
+        required
+    />
+    <input
+        type="text"
+        placeholder="Estado"
+        value={nuevoEquipo.estado}
+        onChange={(e) => setNuevoEquipo({ ...nuevoEquipo, estado: e.target.value })}
+        required
+    />
+    <button type="submit">Agregar Equipo</button>
+</form>

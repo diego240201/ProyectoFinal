@@ -1,0 +1,9 @@
+const agregarEquipo = async () => {
+    try {
+        await axios.post('http://localhost:3001/equipos', nuevoEquipo);
+        setNuevoEquipo({ TipoDeEquipo: '', numSerie: '', estado: '' });
+        obtenerEquipos();
+    } catch (error) {
+        console.error('Error al agregar equipo:', error);
+    }
+};

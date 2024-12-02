@@ -1,0 +1,16 @@
+app.post('/equipos', async (req, res) => {
+    const { TipoDeEquipo, numSerie, estado } = req.body;
+    try {
+        const connection = await oracledb.getConnection(config);
+        await connection.execute(
+            `INSERT INTO Equipo (TipoDeEquipo, numSerie, estado) VALUES (:1, :2, :3)`,
+            [TipoDeEquipo, numSerie, estado],
+            { autoCommit: true }
+        );
+        res.status(201).send('Equipo agregado correctamente');
+        await connection.close();
+    } catch (err) {
+        console.error('Error al agregar equipo:', err);
+        res.status(500).send('Error al agregar equipo');
+    }
+});
